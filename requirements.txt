@@ -1,0 +1,35 @@
+# Core dependencies
+langchain>=0.1.0
+langchain-openai>=0.0.2
+langchain-core>=0.1.0
+langgraph>=0.0.20
+openai>=1.0.0
+
+# GitHub integration
+PyGithub>=2.1.0
+requests>=2.31.0
+
+# Code analysis
+ast-decompiler>=0.7.0
+bandit>=1.7.5
+black>=23.0.0
+flake8>=6.0.0
+pylint>=3.0.0
+mypy>=1.5.0
+
+# Configuration and utilities
+PyYAML>=6.0
+python-dotenv>=1.0.0
+click>=8.1.0
+
+# Logging and monitoring
+structlog>=23.0.0
+
+# FastAPI server
+fastapi>=0.104.0
+uvicorn>=0.24.0
+pydantic>=2.0.0
+
+# Testing (optional)
+pytest>=7.4.0
+pytest-asyncio>=0.21.0
