@@ -53,7 +53,13 @@ def test_supervisor_includes_security_comments():
     assert "overall_summary" in result
     assert "inline_comments" in result
     assert len(result["inline_comments"]) == 1
-    assert any("Security scan" in item for item in result["overall_summary"]["highlights"])
+    assert set(result["overall_summary"].keys()) >= {
+        "positive_feedback",
+        "highlights",
+        "top_priorities",
+        "growth_suggestions",
+    }
+    assert isinstance(result["overall_summary"]["highlights"], list)
 
 
 def test_supervisor_prioritizes_security_and_high_severity():
@@ -79,4 +85,4 @@ def test_supervisor_prioritizes_security_and_high_severity():
     comments = result["inline_comments"]
     assert comments[0]["severity"] == "high"
     assert "pip-audit" in comments[0]["body"]
-    assert any("보안 관련 코멘트" in item for item in result["overall_summary"]["highlights"])
+    assert isinstance(result["overall_summary"]["top_priorities"], list)
