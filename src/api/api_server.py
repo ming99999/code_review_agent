@@ -6,7 +6,6 @@ from typing import Dict, Any, List
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from agents.review_agent import CodeReviewAgent
-from agents.code_analyzer import CodeAnalyzer
 from agents.analyzer_factory import AnalyzerFactory
 
 # Configure logging
@@ -19,7 +18,7 @@ logger = logging.getLogger(__name__)
 app = FastAPI(
     title="AI Code Review API", 
     version="1.0.0",
-    description="REST API for AI-powered code review system"
+    description="REST API for AI-powered code review system (LangGraph pipeline only)"
 )
 
 class CodeReviewRequest(BaseModel):
