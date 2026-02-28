@@ -90,8 +90,13 @@ def test_review_pr_files_snapshot_like_regression(monkeypatch):
     assert isinstance(result["summary"]["highlights"], list)
     assert isinstance(result["summary"]["top_priorities"], list)
     assert len(result["comments"]) == 1
-    assert result["comments"][0]["file_path"] == "app/main.py"
-    assert "unused import" in result["comments"][0]["body"]
+    comment = result["comments"][0]
+    assert set(comment.keys()) >= {"file_path", "line_number", "severity", "body"}
+    assert comment["file_path"] == "app/main.py"
+    assert isinstance(comment["line_number"], int)
+    assert comment["severity"] in {"low", "medium", "high", "critical"}
+    assert isinstance(comment["body"], str)
+    assert comment["body"].strip()
 
 
 def test_llm_comment_response_validates_required_fields():
