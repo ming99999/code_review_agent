@@ -44,3 +44,14 @@ def test_run_gitleaks_invalid_json_report(monkeypatch):
     monkeypatch.setattr(linter_runner, "open", lambda *_a, **_k: type("_X", (), {"read": lambda self: "{"})(), raising=False)
     findings = linter_runner.run_gitleaks()
     assert findings[0]["rule_id"] == "gitleaks_runner_error"
+
+
+def test_resolve_gitleaks_bin_returns_env_path(monkeypatch, tmp_path):
+    fake = tmp_path / "gitleaks"
+    fake.write_text("#!/bin/sh\nexit 0\n", encoding="utf-8")
+    fake.chmod(0o755)
+
+    monkeypatch.setenv("GITLEAKS_BIN", str(fake))
+    monkeypatch.setattr(linter_runner.shutil, "which", lambda *_: None)
+
+    assert linter_runner._resolve_gitleaks_bin() == str(fake)

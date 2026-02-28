@@ -7,6 +7,7 @@ import os
 import shutil
 import subprocess
 import tempfile
+from pathlib import Path
 from typing import Any, Dict, List
 
 
@@ -143,7 +144,8 @@ def run_pip_audit(requirements_path: str = "requirements.txt", timeout_sec: int 
 
 def run_gitleaks(scan_path: str = ".", timeout_sec: int = 60) -> List[LintFinding]:
     """Run gitleaks secret scanning and normalize output."""
-    if not shutil.which("gitleaks"):
+    gitleaks_bin = _resolve_gitleaks_bin()
+    if not gitleaks_bin:
         return [_tool_unavailable_finding("PR", "gitleaks")]
 
     with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False, encoding="utf-8") as tmp:
@@ -151,7 +153,7 @@ def run_gitleaks(scan_path: str = ".", timeout_sec: int = 60) -> List[LintFindin
 
     try:
         cmd = [
-            "gitleaks",
+            gitleaks_bin,
             "detect",
             "--no-git",
             "--source",
@@ -194,6 +196,24 @@ def run_gitleaks(scan_path: str = ".", timeout_sec: int = 60) -> List[LintFindin
             os.remove(report_path)
         except OSError:
             pass
+
+
+def _resolve_gitleaks_bin() -> str | None:
+    """Resolve gitleaks executable from env, PATH, or project-local install path."""
+    explicit = os.getenv("GITLEAKS_BIN")
+    if explicit and os.path.isfile(explicit) and os.access(explicit, os.X_OK):
+        return explicit
+
+    in_path = shutil.which("gitleaks")
+    if in_path:
+        return in_path
+
+    project_root = Path(__file__).resolve().parents[2]
+    local_bin = project_root / ".local" / "bin" / "gitleaks"
+    if local_bin.is_file() and os.access(local_bin, os.X_OK):
+        return str(local_bin)
+
+    return None
 
 
 def _tool_unavailable_finding(file_path: str, tool: str) -> LintFinding:

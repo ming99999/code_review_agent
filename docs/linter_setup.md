@@ -19,7 +19,7 @@ bash scripts/setup_linters.sh
 스크립트가 수행하는 작업:
 1. Python 도구 설치 (`ruff`, `pip-audit`)
 2. Node lint 도구 설치 (`eslint` + Vue/TS parser/plugin)
-3. `gitleaks` 설치 시도(없으면 로컬 바이너리 설치)
+3. `gitleaks` 설치 시도(Conda 활성 환경이면 `$CONDA_PREFIX/bin` 우선 설치, 실패 시 로컬 바이너리 설치)
 4. 설치 결과 버전 확인
 
 ## 2) 수동 설치
@@ -71,7 +71,11 @@ gitleaks version
 
 ### `gitleaks: command not found`
 - `scripts/setup_linters.sh` 재실행
-- 로컬 설치 경로(`.local/bin`)가 PATH에 포함됐는지 확인
+- Conda 환경 사용 시 `which gitleaks`가 `$CONDA_PREFIX/bin/gitleaks`를 가리키는지 확인
+- PATH에 못 잡히는 경우 아래 중 하나를 사용:
+  - `export GITLEAKS_BIN="$(pwd)/.local/bin/gitleaks"`
+  - `export $(cat .env.tools | xargs)`  (setup 스크립트가 `.env.tools`를 생성한 경우)
+- API 실행은 동일 셸에서 `PYTHONPATH=src python -m uvicorn api.api_server:app --host 0.0.0.0 --port 8000` 권장
 
 ### `pip-audit` 네트워크 오류
 - 취약점 DB 조회 시 외부 네트워크가 필요할 수 있음

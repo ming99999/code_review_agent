@@ -9,6 +9,7 @@ set -euo pipefail
 PYTHON_BIN="${PYTHON_BIN:-python3}"
 NPM_BIN="${NPM_BIN:-npm}"
 GITLEAKS_VERSION="${GITLEAKS_VERSION:-8.24.2}"
+GITLEAKS_INSTALL_DIR="${GITLEAKS_INSTALL_DIR:-}"
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT_DIR"
@@ -35,12 +36,28 @@ install_gitleaks() {
   archive="gitleaks_${GITLEAKS_VERSION}_${os}_${arch}.tar.gz"
   url="https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/${archive}"
 
-  mkdir -p "$ROOT_DIR/.local/bin"
+  local target_dir
+  if [ -n "$GITLEAKS_INSTALL_DIR" ]; then
+    target_dir="$GITLEAKS_INSTALL_DIR"
+  elif [ -n "${CONDA_PREFIX:-}" ] && [ -w "$CONDA_PREFIX/bin" ]; then
+    target_dir="$CONDA_PREFIX/bin"
+  else
+    target_dir="$ROOT_DIR/.local/bin"
+  fi
+
+  mkdir -p "$target_dir"
   curl -fsSL "$url" -o /tmp/gitleaks.tar.gz
   tar -xzf /tmp/gitleaks.tar.gz -C /tmp
-  mv /tmp/gitleaks "$ROOT_DIR/.local/bin/gitleaks"
-  chmod +x "$ROOT_DIR/.local/bin/gitleaks"
-  export PATH="$ROOT_DIR/.local/bin:$PATH"
+  mv /tmp/gitleaks "$target_dir/gitleaks"
+  chmod +x "$target_dir/gitleaks"
+
+  if [ "$target_dir" = "$ROOT_DIR/.local/bin" ]; then
+    export PATH="$ROOT_DIR/.local/bin:$PATH"
+    echo "GITLEAKS_BIN=$ROOT_DIR/.local/bin/gitleaks" > "$ROOT_DIR/.env.tools"
+    echo "Installed to project-local path. Optionally run: export \$(cat .env.tools | xargs)"
+  else
+    echo "Installed gitleaks to: $target_dir/gitleaks"
+  fi
 }
 
 echo "[1/5] Installing Python tools (ruff, pip-audit)..."
@@ -72,6 +89,9 @@ echo "[5/5] Verifying Node/Security tools..."
 ./node_modules/.bin/eslint --version
 if command -v gitleaks >/dev/null 2>&1; then
   gitleaks version
+elif [ -x "$ROOT_DIR/.local/bin/gitleaks" ]; then
+  "$ROOT_DIR/.local/bin/gitleaks" version
+  echo "Tip: export GITLEAKS_BIN=$ROOT_DIR/.local/bin/gitleaks"
 else
   echo "gitleaks is not available in PATH"
 fi
